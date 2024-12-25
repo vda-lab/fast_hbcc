@@ -2,4 +2,4 @@ numpy >= 1.2, <3
 numba >= 0.57.1
 scipy >= 1.9
 scikit-learn >= 1.1
-fast_hdbscan >= 0.2.0 @ https://github.com/JelmerBot/fast_hdbscan.git@dev/branches#egg=fast_hdbscan
+fast_hdbscan >= 0.2.0 @ git+ssh://git@github.com/JelmerBot/fast_hdbscan.git@dev/branches#egg=fast_hdbscan
