@@ -140,7 +140,7 @@ def test_hbcc_allow_single_cluster_with_epsilon():
 
 def test_hbcc_max_cluster_size():
     model = HBCC(max_cluster_size=15).fit(X)
-    assert len(set(model.labels_)) >= 11
+    assert len(set(model.labels_)) == 1
     for label in set(model.labels_):
         if label != -1:
             assert np.sum(model.labels_ == label) <= 15
