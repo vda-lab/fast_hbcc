@@ -35,32 +35,8 @@ The HBCC algorithm works as follows:
    graph union [5].
 5. Compute HDBSCAN cluster hierarchy and selection [1].
 
-References:
-  - [1] Campello, R. J., Moulavi, D., & Sander, J. (2013, April). Density-based
-    clustering based on hierarchical density estimates. In Pacific-Asia
-    Conference on Knowledge Discovery and Data Mining (pp. 160-172). Springer
-    Berlin Heidelberg.
 
-  - [2] Vandaele, R., Saeys, Y., & De Bie, T. (2019). The Boundary Coefficient :
-    a Vertex Measure for Visualizing and Finding Structure in Weighted Graphs.
-    15th International Workshop on Mining and Learning with Graphs (MLG).
-
-  - [3] McInnes, L., & Healy, J. (2017). Accelerated Hierarchical Density Based
-    Clustering. 2017 IEEE International Conference on Data Mining Workshops
-    (ICDMW), 2017-Novem, 33–42. https://doi.org/10.1109/ICDMW.2017.12.
-
-  - [4] Peng, D., Gui, Z., Wang, D., Ma, Y., Huang, Z., Zhou, Y., & Wu, H.
-    (2022). Clustering by measuring local direction centrality for data with
-    heterogeneous density and weak connectivity. Nature Communications, 13(1),
-    1–14. https://doi.org/10.1038/s41467-022-33136-9.
-
-  - [5] Bot, Daniël M., et al. "FLASC: A Flare-Sensitive Clustering Algorithm:
-    Extending HDBSCAN* for Detecting Branches in Clusters." arXiv preprint
-    arXiv:2311.15887 (2023). https://arxiv.org/abs/2311.15887.
-
-
-How to use HBCC
----------------
+## How to use HBCC
 
 ```python
 import numpy as np
@@ -96,3 +72,28 @@ Citing information not available yet.
 ## Licensing
 
 The fast_hbcc package has a 2-Clause BSD license. 
+
+
+## References
+
+  - [1] Campello, R. J., Moulavi, D., & Sander, J. (2013, April). Density-based
+    clustering based on hierarchical density estimates. In Pacific-Asia
+    Conference on Knowledge Discovery and Data Mining (pp. 160-172). Springer
+    Berlin Heidelberg.
+
+  - [2] Vandaele, R., Saeys, Y., & De Bie, T. (2019). The Boundary Coefficient :
+    a Vertex Measure for Visualizing and Finding Structure in Weighted Graphs.
+    15th International Workshop on Mining and Learning with Graphs (MLG).
+
+  - [3] McInnes, L., & Healy, J. (2017). Accelerated Hierarchical Density Based
+    Clustering. 2017 IEEE International Conference on Data Mining Workshops
+    (ICDMW), 2017-Novem, 33–42. https://doi.org/10.1109/ICDMW.2017.12.
+
+  - [4] Peng, D., Gui, Z., Wang, D., Ma, Y., Huang, Z., Zhou, Y., & Wu, H.
+    (2022). Clustering by measuring local direction centrality for data with
+    heterogeneous density and weak connectivity. Nature Communications, 13(1),
+    1–14. https://doi.org/10.1038/s41467-022-33136-9.
+
+  - [5] Bot, Daniël M., et al. "FLASC: A Flare-Sensitive Clustering Algorithm:
+    Extending HDBSCAN* for Detecting Branches in Clusters." arXiv preprint
+    arXiv:2311.15887 (2023). https://arxiv.org/abs/2311.15887.
