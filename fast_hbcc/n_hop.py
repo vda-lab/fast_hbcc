@@ -41,6 +41,8 @@ def manifold_knn_path(root, distances, indices, max_depth=2):
     queue = make_queue()
     children = {np.int32(root): np.float32(0.0) for _ in range(0)}
     for dist, child in zip(distances[root], indices[root]):
+        if child < 0:
+            continue
         push(queue, dist, child, np.int32(1))
     while queue:
         distance, point, depth = pop(queue)
@@ -50,7 +52,7 @@ def manifold_knn_path(root, distances, indices, max_depth=2):
         if depth == max_depth:
             continue
         for dist, child in zip(distances[point], indices[point]):
-            if child == root or child in children:
+            if child < 0 or child == root or child in children:
                 continue
             push(queue, distance + dist, child, depth + 1)
     return children
@@ -157,6 +159,8 @@ def metric_knn_path(
     stack = make_queue()
     enqueued = {root}
     for child in indices[root]:
+        if child < 0:
+            continue
         distance = np.sqrt(rdist(data[root], data[child]))
         if use_reachability:
             distance = max(distance, core_distances[root], core_distances[child])
@@ -170,7 +174,7 @@ def metric_knn_path(
         if depth == max_depth:
             continue
         for child in indices[point]:
-            if child in enqueued:
+            if child < 0 or child in enqueued:
                 continue
             distance = np.sqrt(rdist(data[root], data[child]))
             if use_reachability:

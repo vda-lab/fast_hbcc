@@ -57,6 +57,33 @@ def boundary_coefficient_from_csr(g):
     ) / (degree * degree)
 
 
+def compute_boundary_coefficient(
+    data, 
+    neighbors, 
+    core_distances, 
+    min_spanning_tree,
+    num_hops: int = 2,
+    hop_type: Literal["manifold", "metric"] = "manifold",
+    boundary_connectivity: Literal["knn", "core"] = "knn",
+    boundary_use_reachability: bool = True,
+):  
+    n_hop_expansion = manifold_n_hop if hop_type == "manifold" else metric_n_hop
+    manifold = csr_array(
+        n_hop_expansion(
+            data,
+            neighbors,
+            core_distances,
+            min_spanning_tree,
+            max_depth=num_hops,
+            connectivity=boundary_connectivity,
+            use_reachability=boundary_use_reachability,
+        ),
+        shape=(data.shape[0], data.shape[0]),
+    )
+
+    return boundary_coefficient_from_csr(manifold)
+
+
 def fast_hbcc(
     data,
     data_labels=None,
@@ -69,7 +96,7 @@ def fast_hbcc(
     boundary_use_reachability: bool = True,
     cluster_selection_method: Literal["eom", "leaf"] = "eom",
     allow_single_cluster: bool = False,
-    max_cluster_size: int = np.inf,
+    max_cluster_size: float = np.inf,
     cluster_selection_epsilon: float = 0.0,
     cluster_selection_persistence: float = 0.0,
     ss_algorithm: Literal["bc", "bc_simple"] = "bc",
@@ -120,21 +147,16 @@ def fast_hbcc(
         data, min_samples=min_samples
     )
 
-    n_hop_expansion = manifold_n_hop if hop_type == "manifold" else metric_n_hop
-    manifold = csr_array(
-        n_hop_expansion(
-            data,
-            neighbors,
-            core_distances,
-            minimum_spanning_tree,
-            max_depth=num_hops,
-            connectivity=boundary_connectivity,
-            use_reachability=boundary_use_reachability,
-        ),
-        shape=(data.shape[0], data.shape[0]),
+    boundary_coefficient = compute_boundary_coefficient(
+        data,
+        neighbors,
+        core_distances,
+        minimum_spanning_tree,
+        num_hops=num_hops,
+        hop_type=hop_type,
+        boundary_connectivity=boundary_connectivity,
+        boundary_use_reachability=boundary_use_reachability
     )
-
-    boundary_coefficient = boundary_coefficient_from_csr(manifold)
 
     result = core_graph_clusters(
         boundary_coefficient,
@@ -268,7 +290,7 @@ class HBCC(HDBSCAN):
         boundary_use_reachability: bool = True,
         cluster_selection_method: Literal["eom", "leaf"] = "eom",
         allow_single_cluster: bool = False,
-        max_cluster_size: int = np.inf,
+        max_cluster_size: float = np.inf,
         cluster_selection_epsilon: float = 0.0,
         cluster_selection_persistence: float = 0.0,
         ss_algorithm: Literal["bc", "bc_simple"] = "bc",
