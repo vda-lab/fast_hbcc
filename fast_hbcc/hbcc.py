@@ -58,15 +58,15 @@ def boundary_coefficient_from_csr(g):
 
 
 def compute_boundary_coefficient(
-    data, 
-    neighbors, 
-    core_distances, 
+    data,
+    neighbors,
+    core_distances,
     min_spanning_tree,
     num_hops: int = 2,
     hop_type: Literal["manifold", "metric"] = "manifold",
     boundary_connectivity: Literal["knn", "core"] = "knn",
     boundary_use_reachability: bool = True,
-):  
+):
     n_hop_expansion = manifold_n_hop if hop_type == "manifold" else metric_n_hop
     manifold = csr_array(
         n_hop_expansion(
@@ -155,7 +155,7 @@ def fast_hbcc(
         num_hops=num_hops,
         hop_type=hop_type,
         boundary_connectivity=boundary_connectivity,
-        boundary_use_reachability=boundary_use_reachability
+        boundary_use_reachability=boundary_use_reachability,
     )
 
     result = core_graph_clusters(
@@ -402,15 +402,8 @@ class HBCC(HDBSCAN):
         return self
 
     @property
-    def core_graph_(self):
-        """See :class:`~hdbscan.branches.BranchDetector` for documentation.
-
-        Re-uses plotting functionality from HDBSCAN's BranchDetector. As such,
-        the boundary coefficient is passed along as if it were centrality and
-        branch labels and probabilities are set to no-branch defaults. The
-        `cluster` edge attribute should be interpreted as a connected component
-        label, which is always zero in this case.
-        """
+    def approximation_graph_(self):
+        """See :class:`~hdbscan.plots.ApproximationGraph` for documentation."""
         from hdbscan.plots import ApproximationGraph
 
         check_is_fitted(
@@ -423,10 +416,7 @@ class HBCC(HDBSCAN):
             [core_graph_to_edge_list(self._core_graph)],
             self.labels_,
             self.probabilities_,
-            self.labels_,
-            self.probabilities_,
             self.boundary_coefficient_,
-            np.zeros_like(self.labels_),
-            np.ones_like(self.probabilities_),
-            self._raw_data,
+            lens_name="boundary_coefficient",
+            raw_data=self._raw_data,
         )

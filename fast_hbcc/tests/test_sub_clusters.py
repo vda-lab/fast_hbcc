@@ -53,11 +53,14 @@ def check_detected_groups(c, n_clusters=3, n_subs=6, overridden=False):
             assert linkage_tree is not None
             assert condensed_tree is not None
 
-# --- Detecting SubClusters	
+
+# --- Detecting SubClusters
 
 
 def test_attributes():
-    def check_attributes():
+    try:
+        from hdbscan.plots import ApproximationGraph, CondensedTree, SingleLinkageTree
+
         b = BoundaryClusterDetector().fit(c)
         check_detected_groups(b, n_clusters=2, n_subs=8)
         assert len(b.linkage_trees_) == 2
@@ -65,11 +68,6 @@ def test_attributes():
         assert isinstance(b.condensed_trees_[0], CondensedTree)
         assert isinstance(b.linkage_trees_[0], SingleLinkageTree)
         assert isinstance(b.approximation_graph_, ApproximationGraph)
-
-    try:
-        from hdbscan.plots import ApproximationGraph, CondensedTree, SingleLinkageTree
-
-        check_attributes()
     except ImportError:
         pass
 
@@ -84,7 +82,9 @@ def test_selection_method():
 
 def test_min_cluster_size():
     b = BoundaryClusterDetector(min_cluster_size=7).fit(c)
-    labels, counts = np.unique(b.labels_[b.sub_cluster_labels_ >= 0], return_counts=True)
+    labels, counts = np.unique(
+        b.labels_[b.sub_cluster_labels_ >= 0], return_counts=True
+    )
     assert (counts[labels >= 0] >= 7).all()
     check_detected_groups(b, n_clusters=2, n_subs=9)
 
@@ -134,7 +134,7 @@ def test_allow_single_cluster_with_filters():
     unique_labels = np.unique(b.labels_)
     assert len(unique_labels) == 2
 
-    
+
 def test_badargs():
     c_nofit = HDBSCAN(min_cluster_size=5)
 
@@ -163,4 +163,3 @@ def test_badargs():
             c,
             cluster_selection_method="something_else",
         )
-

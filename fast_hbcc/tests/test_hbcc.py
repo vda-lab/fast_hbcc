@@ -8,7 +8,7 @@ import numpy as np
 from sklearn.utils.estimator_checks import check_estimator
 
 from sklearn.utils import shuffle
-from sklearn.datasets import make_blobs, make_moons
+from sklearn.datasets import make_blobs
 from sklearn.preprocessing import StandardScaler
 
 from fast_hbcc import HBCC, fast_hbcc
@@ -153,6 +153,24 @@ def test_hbcc_persistence_threshold():
         cluster_selection_persistence=20.0,
     ).fit(X)
     assert np.all(model.labels_ == -1)
+
+
+def test_attributes():
+    try:
+        from hdbscan.plots import (
+            ApproximationGraph,
+            CondensedTree,
+            SingleLinkageTree,
+            MinimumSpanningTree,
+        )
+
+        c = HBCC().fit(X)
+        assert isinstance(c.condensed_tree_, CondensedTree)
+        assert isinstance(c.single_linkage_tree_, SingleLinkageTree)
+        assert isinstance(c.minimum_spanning_tree_, MinimumSpanningTree)
+        assert isinstance(c.approximation_graph_, ApproximationGraph)
+    except ImportError:
+        pass
 
 
 # Disable for now -- need to refactor to meet newer standards

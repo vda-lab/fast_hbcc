@@ -42,7 +42,9 @@ def find_boundary_subclusters(
         clusterer,
         cluster_labels,
         cluster_probabilities,
-        lens_callback=make_boundary_callback(num_hops, hop_type, boundary_connectivity, boundary_use_reachability),
+        lens_callback=make_boundary_callback(
+            num_hops, hop_type, boundary_connectivity, boundary_use_reachability
+        ),
         min_cluster_size=min_cluster_size,
         max_cluster_size=max_cluster_size,
         allow_single_cluster=allow_single_cluster,
@@ -50,7 +52,6 @@ def find_boundary_subclusters(
         cluster_selection_epsilon=cluster_selection_epsilon,
         cluster_selection_persistence=cluster_selection_persistence,
     )
-
 
 
 class BoundaryClusterDetector(SubClusterDetector):
@@ -65,6 +66,7 @@ class BoundaryClusterDetector(SubClusterDetector):
        FLASC: A Flare-Sensitive Clustering Algorithm: Extending HDBSCAN* for
        Detecting Branches in Clusters. arXiv:2311.15887.
     """
+
     def __init__(
         self,
         num_hops: int = 2,
@@ -91,10 +93,24 @@ class BoundaryClusterDetector(SubClusterDetector):
         self.boundary_connectivity = boundary_connectivity
         self.boundary_use_reachability = boundary_use_reachability
 
-
     def fit(self, clusterer, labels=None, probabilities=None):
-        super().fit(clusterer, labels, probabilities, make_boundary_callback(
-            self.num_hops, self.hop_type, self.boundary_connectivity, self.boundary_use_reachability
-        ))
+        super().fit(
+            clusterer,
+            labels,
+            probabilities,
+            make_boundary_callback(
+                self.num_hops,
+                self.hop_type,
+                self.boundary_connectivity,
+                self.boundary_use_reachability,
+            ),
+        )
         self.boundary_coefficient_ = self.lens_values_
         return self
+
+    @property
+    def approximation_graph_(self):
+        """See :class:`~hdbscan.plots.ApproximationGraph` for documentation."""
+        return super()._make_approximation_graph(
+            lens_name="boundary_coefficient", sub_cluster_name="bc"
+        )
