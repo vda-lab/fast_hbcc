@@ -36,13 +36,11 @@ def to_csr(children):
 
 
 @nb.njit()
-def manifold_knn_path(root, distances, indices, max_depth=2):
+def manifold_path(root, graph, max_depth=2):
     """Dijkstra depth-limited traversal."""
     queue = make_queue()
     children = {np.int32(root): np.float32(0.0) for _ in range(0)}
-    for dist, child in zip(distances[root], indices[root]):
-        if child < 0:
-            continue
+    for child, dist in graph[root].items():
         push(queue, dist, child, np.int32(1))
     while queue:
         distance, point, depth = pop(queue)
@@ -51,48 +49,36 @@ def manifold_knn_path(root, distances, indices, max_depth=2):
         children[point] = distance
         if depth == max_depth:
             continue
-        for dist, child in zip(distances[point], indices[point]):
-            if child < 0 or child == root or child in children:
+        for child, dist in graph[point].items():
+            if child == root or child in children:
                 continue
             push(queue, distance + dist, child, depth + 1)
     return children
 
 
-@nb.njit()
-def manifold_mst_path(root, core_graph, max_depth=2, use_reachability=True):
-    """Dijkstra depth-limited traversal."""
-    queue = make_queue()
-    idx = 1 if use_reachability else 0
-    children = {np.int32(root): np.float32(0.0) for _ in range(0)}
-    for child, dist in core_graph[root].items():
-        push(queue, dist[idx], child, np.int32(1))
-    while queue:
-        distance, point, depth = pop(queue)
-        if point in children:
-            continue
-        children[point] = distance
-        if depth == max_depth:
-            continue
-        for child, dist in core_graph[point].items():
-            if child == root or child in children:
-                continue
-            push(queue, distance + dist[idx], child, depth + 1)
-    return children
-
-
-@nb.njit(parallel=True)
+@nb.njit(
+    parallel=True, locals={"root": nb.int32, "child": nb.int32, "dist": nb.float32}
+)
 def manifold_knn_hop(distances, indices, max_depth=2):
     result = [
         {np.int32(0): np.float32(0.0) for _ in range(0)}
         for _ in range(indices.shape[0])
     ]
+
+    for root in range(indices.shape[0]):
+        for child, dist in zip(indices[root], distances[root]):
+            if child < 0:
+                continue
+            result[root][child] = dist
+            result[child][root] = dist
+
     for root in nb.prange(indices.shape[0]):
-        result[root] = manifold_knn_path(root, distances, indices, max_depth=max_depth)
+        result[root] = manifold_path(root, result, max_depth=max_depth)
 
     return to_csr(result)
 
 
-@nb.njit(parallel=True)
+@nb.njit(parallel=True, locals={"root": nb.int32, "child": nb.int32})
 def manifold_mst_hop(
     data,
     indices,
@@ -105,21 +91,25 @@ def manifold_mst_hop(
     core_graph = knn_mst_union(
         indices, core_distances, minimum_spanning_tree, core_distances
     )
-    if use_reachability:
+    if not use_reachability:
         for point in nb.prange(num_points):
             for child, value in core_graph[point].items():
                 core_graph[point][child] = (
+                    value[0],
                     np.sqrt(rdist(data[point], data[child])),
-                    value[1],
                 )
+
     result = [
-        {np.int32(0): np.float32(0.0) for _ in range(0)}
-        for _ in range(indices.shape[0])
+        {np.int32(0): np.float32(0.0) for _ in range(0)} for _ in range(num_points)
     ]
-    for root in nb.prange(indices.shape[0]):
-        result[root] = manifold_mst_path(
-            root, core_graph, max_depth=max_depth, use_reachability=use_reachability
-        )
+
+    for root in range(num_points):
+        for child, dist in core_graph[root].items():
+            result[root][child] = np.float32(dist[1])
+            result[child][root] = np.float32(dist[1])
+
+    for root in nb.prange(num_points):
+        result[root] = manifold_path(root, result, max_depth=max_depth)
     return to_csr(result)
 
 
@@ -152,15 +142,11 @@ def manifold_n_hop(
 
 
 @nb.njit()
-def metric_knn_path(
-    root, data, indices, core_distances, max_depth=2, use_reachability=True
-):
+def metric_path(root, data, graph, core_distances, max_depth=2, use_reachability=True):
     """Depth first depth-limit traversal."""
     stack = make_queue()
     enqueued = {root}
-    for child in indices[root]:
-        if child < 0:
-            continue
+    for child in graph[root].keys():
         distance = np.sqrt(rdist(data[root], data[child]))
         if use_reachability:
             distance = max(distance, core_distances[root], core_distances[child])
@@ -173,38 +159,7 @@ def metric_knn_path(
         children[point] = distance
         if depth == max_depth:
             continue
-        for child in indices[point]:
-            if child < 0 or child in enqueued:
-                continue
-            distance = np.sqrt(rdist(data[root], data[child]))
-            if use_reachability:
-                distance = max(distance, core_distances[root], core_distances[child])
-            push(stack, distance, child, depth + 1)
-            enqueued.add(child)
-    return children
-
-
-@nb.njit()
-def metric_mst_path(
-    root, data, core_graph, core_distances, max_depth=2, use_reachability=True
-):
-    """Depth first depth-limit traversal."""
-    stack = make_queue()
-    enqueued = {root}
-    for child in core_graph[root].keys():
-        distance = np.sqrt(rdist(data[root], data[child]))
-        if use_reachability:
-            distance = max(distance, core_distances[root], core_distances[child])
-        append(stack, distance, child, np.int32(1))
-        enqueued.add(child)
-
-    children = {np.int32(root): np.float32(0.0) for _ in range(0)}
-    while stack:
-        distance, point, depth = pop_last(stack)
-        children[point] = distance
-        if depth == max_depth:
-            continue
-        for child in core_graph[point].keys():
+        for child in graph[point].keys():
             if child in enqueued:
                 continue
             distance = np.sqrt(rdist(data[root], data[child]))
@@ -215,7 +170,7 @@ def metric_mst_path(
     return children
 
 
-@nb.njit(parallel=True)
+@nb.njit(parallel=True, locals={"root": nb.int32, "child": nb.int32})
 def metric_knn_hop(
     data,
     indices,
@@ -227,11 +182,19 @@ def metric_knn_hop(
         {np.int32(0): np.float32(0.0) for _ in range(0)}
         for _ in range(indices.shape[0])
     ]
+
+    for root in range(indices.shape[0]):
+        for child in indices[root]:
+            if child < 0:
+                continue
+            result[root][child] = np.float32(0.0)
+            result[child][root] = np.float32(0.0)
+
     for root in nb.prange(indices.shape[0]):
-        result[root] = metric_knn_path(
+        result[root] = metric_path(
             root,
             data,
-            indices,
+            result,
             core_distances,
             max_depth=max_depth,
             use_reachability=use_reachability,
@@ -239,7 +202,7 @@ def metric_knn_hop(
     return to_csr(result)
 
 
-@nb.njit(parallel=True)
+@nb.njit(parallel=True, locals={"root": nb.int32, "child": nb.int32})
 def metric_mst_hop(
     data,
     indices,
@@ -251,15 +214,22 @@ def metric_mst_hop(
     core_graph = knn_mst_union(
         indices, core_distances, minimum_spanning_tree, core_distances
     )
+
     result = [
         {np.int32(0): np.float32(0.0) for _ in range(0)}
         for _ in range(indices.shape[0])
     ]
+
+    for root in range(indices.shape[0]):
+        for child in core_graph[root].keys():
+            result[root][child] = np.float32(0.0)
+            result[child][root] = np.float32(0.0)
+
     for root in nb.prange(indices.shape[0]):
-        result[root] = metric_mst_path(
+        result[root] = metric_path(
             root,
             data,
-            core_graph,
+            result,
             core_distances,
             max_depth=max_depth,
             use_reachability=use_reachability,
