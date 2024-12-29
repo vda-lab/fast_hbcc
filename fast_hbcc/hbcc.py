@@ -401,6 +401,11 @@ class HBCC(HDBSCAN):
 
         return self
 
+    def fit_predict(self, X, y=None, **fit_params):
+        self.fit(X, y, **fit_params)
+        return self.labels_
+
+
     @property
     def approximation_graph_(self):
         """See :class:`~hdbscan.plots.ApproximationGraph` for documentation."""

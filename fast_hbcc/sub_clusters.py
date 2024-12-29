@@ -23,7 +23,7 @@ def make_boundary_callback(
     )
 
 
-def find_boundary_subclusters(
+def find_boundary_sub_clusters(
     clusterer,
     cluster_labels=None,
     cluster_probabilities=None,
@@ -87,6 +87,7 @@ class BoundaryClusterDetector(SubClusterDetector):
             cluster_selection_method=cluster_selection_method,
             cluster_selection_epsilon=cluster_selection_epsilon,
             cluster_selection_persistence=cluster_selection_persistence,
+            propagate_labels=True,
         )
         self.num_hops = num_hops
         self.hop_type = hop_type

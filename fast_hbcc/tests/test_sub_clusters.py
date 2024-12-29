@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.exceptions import NotFittedError
 from fast_hdbscan import HDBSCAN
 
-from fast_hbcc import BoundaryClusterDetector, find_boundary_subclusters
+from fast_hbcc import BoundaryClusterDetector, find_boundary_sub_clusters
 
 
 def make_branches(points_per_branch=30):
@@ -54,7 +54,7 @@ def check_detected_groups(c, n_clusters=3, n_subs=6, overridden=False):
             assert condensed_tree is not None
 
 
-# --- Detecting SubClusters
+# --- Detecting Sub_Clusters
 
 
 def test_attributes():
@@ -62,7 +62,7 @@ def test_attributes():
         from hdbscan.plots import ApproximationGraph, CondensedTree, SingleLinkageTree
 
         b = BoundaryClusterDetector().fit(c)
-        check_detected_groups(b, n_clusters=2, n_subs=8)
+        check_detected_groups(b, n_clusters=2, n_subs=6)
         assert len(b.linkage_trees_) == 2
         assert len(b.condensed_trees_) == 2
         assert isinstance(b.condensed_trees_[0], CondensedTree)
@@ -74,10 +74,10 @@ def test_attributes():
 
 def test_selection_method():
     b = BoundaryClusterDetector(cluster_selection_method="eom").fit(c)
-    check_detected_groups(b, n_clusters=2, n_subs=8)
+    check_detected_groups(b, n_clusters=2, n_subs=6)
 
     b = BoundaryClusterDetector(cluster_selection_method="leaf").fit(c)
-    check_detected_groups(b, n_clusters=2, n_subs=9)
+    check_detected_groups(b, n_clusters=2, n_subs=7)
 
 
 def test_min_cluster_size():
@@ -86,7 +86,7 @@ def test_min_cluster_size():
         b.labels_[b.sub_cluster_labels_ >= 0], return_counts=True
     )
     assert (counts[labels >= 0] >= 7).all()
-    check_detected_groups(b, n_clusters=2, n_subs=9)
+    check_detected_groups(b, n_clusters=2, n_subs=7)
 
 
 def test_max_cluster_size():
@@ -114,7 +114,7 @@ def test_allow_single_cluster_with_filters():
         cluster_selection_method="leaf",
     ).fit(c)
     unique_labels = np.unique(b.labels_)
-    assert len(unique_labels) == 16
+    assert len(unique_labels) == 14
 
     # Adding persistence removes the branches
     b = BoundaryClusterDetector(
@@ -123,7 +123,7 @@ def test_allow_single_cluster_with_filters():
         cluster_selection_persistence=0.15,
     ).fit(c)
     unique_labels = np.unique(b.labels_)
-    assert len(unique_labels) == 10
+    assert len(unique_labels) == 8
 
     # Adding epsilon removes some branches
     b = BoundaryClusterDetector(
@@ -139,27 +139,27 @@ def test_badargs():
     c_nofit = HDBSCAN(min_cluster_size=5)
 
     with pytest.raises(TypeError):
-        find_boundary_subclusters("fail")
+        find_boundary_sub_clusters("fail")
     with pytest.raises(TypeError):
-        find_boundary_subclusters(None)
+        find_boundary_sub_clusters(None)
     with pytest.raises(NotFittedError):
-        find_boundary_subclusters(c_nofit)
+        find_boundary_sub_clusters(c_nofit)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, min_cluster_size=-1)
+        find_boundary_sub_clusters(c, min_cluster_size=-1)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, min_cluster_size=0)
+        find_boundary_sub_clusters(c, min_cluster_size=0)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, min_cluster_size=1)
+        find_boundary_sub_clusters(c, min_cluster_size=1)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, min_cluster_size=2.0)
+        find_boundary_sub_clusters(c, min_cluster_size=2.0)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, min_cluster_size="fail")
+        find_boundary_sub_clusters(c, min_cluster_size="fail")
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, cluster_selection_persistence=-0.1)
+        find_boundary_sub_clusters(c, cluster_selection_persistence=-0.1)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(c, cluster_selection_epsilon=-0.1)
+        find_boundary_sub_clusters(c, cluster_selection_epsilon=-0.1)
     with pytest.raises(ValueError):
-        find_boundary_subclusters(
+        find_boundary_sub_clusters(
             c,
             cluster_selection_method="something_else",
         )
