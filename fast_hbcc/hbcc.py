@@ -51,10 +51,12 @@ def boundary_coefficient_from_csr(g):
     g_inv = g.copy()
     g_inv.data = 1 / g_inv.data
     degree = np.diff(g.indptr)
-    return (
-        g.sum(axis=1) * g_inv.sum(axis=1)
-        - ((g_inv @ g.power(2)) * g_inv).sum(axis=1) / 2
-    ) / (degree * degree)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        result = (
+            g.sum(axis=1) * g_inv.sum(axis=1)
+            - ((g_inv @ g.power(2)) * g_inv).sum(axis=1) / 2
+        ) / (degree * degree)
+    return np.where(np.isnan(result), np.inf, result)
 
 
 def compute_boundary_coefficient(
@@ -404,7 +406,6 @@ class HBCC(HDBSCAN):
     def fit_predict(self, X, y=None, **fit_params):
         self.fit(X, y, **fit_params)
         return self.labels_
-
 
     @property
     def approximation_graph_(self):
