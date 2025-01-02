@@ -70,6 +70,13 @@ def test_hbcc_no_clusters():
     assert n_clusters_2 == 0
 
 
+def test_hbcc_sample_weight():
+    sample_weight = y.astype(np.float32)
+    labels, p = fast_hbcc(X, sample_weights=sample_weight)
+    n_clusters_1 = len(set(labels)) - int(-1 in labels)
+    assert n_clusters_1 == n_clusters - 1
+
+
 def test_hbcc_min_cluster_size():
     for min_cluster_size in range(2, len(X) + 1, 1):
         labels, p = fast_hbcc(X, min_cluster_size=min_cluster_size)

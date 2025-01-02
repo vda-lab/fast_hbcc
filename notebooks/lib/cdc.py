@@ -9,7 +9,7 @@ algorithm from [1]_.
 
 Reference
 ---------
-.. [1] Peng, D., Gui, Z.*, Wang, D. et al. Clustering by measuring local
+.. [1] Peng, D., Gui, Z., Wang, D. et al. Clustering by measuring local
    direction centrality for data with heterogeneous density and weak
    connectivity. Nat.Commun. 13, 5455 (2022).
    https://www.nature.com/articles/s41467-022-33136-9

@@ -3,7 +3,7 @@ import numpy as np
 from typing import Literal
 from scipy.sparse import csr_array
 from sklearn.utils import check_array, check_X_y
-from sklearn.utils.validation import check_is_fitted
+from sklearn.utils.validation import check_is_fitted, _check_sample_weight
 from fast_hdbscan.core_graph import core_graph_clusters, core_graph_to_edge_list
 from fast_hdbscan.hdbscan import (
     HDBSCAN,
@@ -89,7 +89,7 @@ def compute_boundary_coefficient(
 def fast_hbcc(
     data,
     data_labels=None,
-    *,
+    sample_weights=None,
     num_hops: int = 2,
     min_samples: int = 5,
     min_cluster_size: int = 25,
@@ -146,7 +146,7 @@ def fast_hbcc(
     nb.set_num_threads(num_jobs)
 
     minimum_spanning_tree, neighbors, core_distances = compute_minimum_spanning_tree(
-        data, min_samples=min_samples
+        data, min_samples=min_samples, sample_weights=sample_weights
     )
 
     boundary_coefficient = compute_boundary_coefficient(
@@ -166,6 +166,7 @@ def fast_hbcc(
         core_distances,
         minimum_spanning_tree,
         data_labels=data_labels,
+        sample_weights=sample_weights,    
         min_cluster_size=min_cluster_size,
         cluster_selection_method=cluster_selection_method,
         allow_single_cluster=allow_single_cluster,
@@ -283,7 +284,6 @@ class HBCC(HDBSCAN):
 
     def __init__(
         self,
-        *,
         num_hops: int = 2,
         min_samples: int = 5,
         min_cluster_size: int = 25,
@@ -314,7 +314,7 @@ class HBCC(HDBSCAN):
         self.boundary_use_reachability = boundary_use_reachability
         self.num_jobs = num_jobs
 
-    def fit(self, X, y=None, **fit_params):
+    def fit(self, X, y=None, sample_weight=None, **fit_params):
         """
         Computes the Hierarchical Boundary Coefficient Clustering (HBCC).
 
@@ -346,6 +346,8 @@ class HBCC(HDBSCAN):
         else:
             X = check_array(X, accept_sparse="csr", force_all_finite=False)
             self._raw_data = X
+        if sample_weight is not None:
+            sample_weight = _check_sample_weight(sample_weight, X, dtype=np.float32)
 
         self._all_finite = np.all(np.isfinite(X))
         if ~self._all_finite:
@@ -353,10 +355,8 @@ class HBCC(HDBSCAN):
             # We will later assign all non-finite points to the background -1 cluster
             finite_index = np.where(np.isfinite(X).sum(axis=1) == X.shape[1])[0]
             clean_data = X[finite_index]
-            clean_labels = y
-
-            if self.semi_supervised:
-                clean_labels = y[finite_index]
+            clean_labels = y[finite_index] if self.semi_supervised else None
+            sample_weight = sample_weight[finite_index] if sample_weight is not None else None
 
             internal_to_raw = {
                 x: y for x, y in zip(range(len(finite_index)), finite_index)
@@ -377,7 +377,13 @@ class HBCC(HDBSCAN):
             self.boundary_coefficient_,
             self._neighbors,
             self._core_distances,
-        ) = fast_hbcc(clean_data, clean_labels, return_trees=True, **kwargs)
+        ) = fast_hbcc(
+            clean_data,
+            clean_labels,
+            sample_weight,
+            return_trees=True,
+            **kwargs,
+        )
         self._condensed_tree = to_numpy_rec_array(self._condensed_tree)
 
         if not self._all_finite:
@@ -402,10 +408,6 @@ class HBCC(HDBSCAN):
             self.boundary_coefficient_ = new_probabilities
 
         return self
-
-    def fit_predict(self, X, y=None, **fit_params):
-        self.fit(X, y, **fit_params)
-        return self.labels_
 
     @property
     def approximation_graph_(self):

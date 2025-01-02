@@ -94,11 +94,12 @@ class BoundaryClusterDetector(SubClusterDetector):
         self.boundary_connectivity = boundary_connectivity
         self.boundary_use_reachability = boundary_use_reachability
 
-    def fit(self, clusterer, labels=None, probabilities=None):
+    def fit(self, clusterer, labels=None, probabilities=None, sample_weight=None):
         super().fit(
             clusterer,
             labels,
             probabilities,
+            sample_weight,
             make_boundary_callback(
                 self.num_hops,
                 self.hop_type,

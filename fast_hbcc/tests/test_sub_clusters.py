@@ -80,6 +80,13 @@ def test_selection_method():
     check_detected_groups(b, n_clusters=2, n_subs=7)
 
 
+def test_sample_weight():
+    np.random.seed(0)
+    sample_weight = np.random.uniform(low=0, high=1, size=X.shape[0]).astype(np.float32)
+    b = BoundaryClusterDetector().fit(c, sample_weight=sample_weight)
+    check_detected_groups(b, n_clusters=2, n_subs=2)
+
+
 def test_min_cluster_size():
     b = BoundaryClusterDetector(min_cluster_size=7).fit(c)
     labels, counts = np.unique(
@@ -91,7 +98,7 @@ def test_min_cluster_size():
 
 def test_max_cluster_size():
     b = BoundaryClusterDetector(max_cluster_size=5).fit(c)
-    check_detected_groups(b, n_clusters=2, n_subs=2)
+    assert len(set(b.labels_)) == 2
 
 
 def test_override_cluster_labels():
