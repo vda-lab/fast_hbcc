@@ -13,6 +13,18 @@ from sklearn.preprocessing import StandardScaler
 
 from fast_hbcc import HBCC, fast_hbcc
 
+try:
+    from hdbscan.plots import (
+        ApproximationGraph,
+        CondensedTree,
+        SingleLinkageTree,
+        MinimumSpanningTree,
+    )
+
+    HAVE_HDBSCAN = True
+except ModuleNotFoundError:
+    HAVE_HDBSCAN = False
+
 
 n_clusters = 3
 X, y = make_blobs(n_samples=200, random_state=10)
@@ -162,22 +174,13 @@ def test_hbcc_persistence_threshold():
     assert np.all(model.labels_ == -1)
 
 
+@pytest.mark.skipif(not HAVE_HDBSCAN, reason='requires HDBSCAN')
 def test_attributes():
-    try:
-        from hdbscan.plots import (
-            ApproximationGraph,
-            CondensedTree,
-            SingleLinkageTree,
-            MinimumSpanningTree,
-        )
-
-        c = HBCC().fit(X)
-        assert isinstance(c.condensed_tree_, CondensedTree)
-        assert isinstance(c.single_linkage_tree_, SingleLinkageTree)
-        assert isinstance(c.minimum_spanning_tree_, MinimumSpanningTree)
-        assert isinstance(c.approximation_graph_, ApproximationGraph)
-    except ImportError:
-        pass
+    c = HBCC().fit(X)
+    assert isinstance(c.condensed_tree_, CondensedTree)
+    assert isinstance(c.single_linkage_tree_, SingleLinkageTree)
+    assert isinstance(c.minimum_spanning_tree_, MinimumSpanningTree)
+    assert isinstance(c.approximation_graph_, ApproximationGraph)
 
 
 # Disable for now -- need to refactor to meet newer standards

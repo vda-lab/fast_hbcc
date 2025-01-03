@@ -5,6 +5,13 @@ from fast_hdbscan import HDBSCAN
 
 from fast_hbcc import BoundaryClusterDetector, find_boundary_sub_clusters
 
+try:
+    from hdbscan.plots import ApproximationGraph, CondensedTree, SingleLinkageTree
+
+    HAVE_HDBSCAN = True
+except ModuleNotFoundError:
+    HAVE_HDBSCAN = False
+
 
 def make_branches(points_per_branch=30):
     # Control points for line segments that merge three clusters
@@ -57,19 +64,15 @@ def check_detected_groups(c, n_clusters=3, n_subs=6, overridden=False):
 # --- Detecting Sub_Clusters
 
 
+@pytest.mark.skipif(not HAVE_HDBSCAN, reason='requires HDBSCAN')
 def test_attributes():
-    try:
-        from hdbscan.plots import ApproximationGraph, CondensedTree, SingleLinkageTree
-
-        b = BoundaryClusterDetector().fit(c)
-        check_detected_groups(b, n_clusters=2, n_subs=6)
-        assert len(b.linkage_trees_) == 2
-        assert len(b.condensed_trees_) == 2
-        assert isinstance(b.condensed_trees_[0], CondensedTree)
-        assert isinstance(b.linkage_trees_[0], SingleLinkageTree)
-        assert isinstance(b.approximation_graph_, ApproximationGraph)
-    except ImportError:
-        pass
+    b = BoundaryClusterDetector().fit(c)
+    check_detected_groups(b, n_clusters=2, n_subs=6)
+    assert len(b.linkage_trees_) == 2
+    assert len(b.condensed_trees_) == 2
+    assert isinstance(b.condensed_trees_[0], CondensedTree)
+    assert isinstance(b.linkage_trees_[0], SingleLinkageTree)
+    assert isinstance(b.approximation_graph_, ApproximationGraph)
 
 
 def test_selection_method():
