@@ -7,3 +7,4 @@ The notebooks below demonstrate HBCC's functionality.
    :maxdepth: 1
 
    HBCC.ipynb
+   branch_detection_benchmark.ipynb
