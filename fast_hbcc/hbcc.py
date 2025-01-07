@@ -41,9 +41,14 @@ def check_literals(**kwargs):
             raise ValueError(f"Invalid {k} {v}")
 
 
-def remap_csr_graph(graph, internal_to_raw):
-    for idx, child in enumerate(graph.indices):
-        graph.indices[idx] = internal_to_raw[child]
+def remap_csr_graph(graph, finite_index, internal_to_raw, num_points):
+    new_indptr = np.empty(num_points + 1, dtype=graph.indptr.dtype)
+    new_indptr[0] = 0
+    for idx, (start, end) in enumerate(zip(finite_index, finite_index[1:])):
+        new_indptr[start + 1 : end + 1] = graph.indptr[idx + 1]
+
+    graph.indices[:] = np.vectorize(internal_to_raw.get)(graph.indices)
+    return graph
 
 
 def boundary_coefficient_from_csr(g):
@@ -132,7 +137,9 @@ def fast_hbcc(
         cluster_selection_epsilon=cluster_selection_epsilon,
         cluster_selection_persistence=cluster_selection_persistence,
     )
-    check_optional_size(data.shape[0], data_labels=data_labels)
+    check_optional_size(
+        data.shape[0], data_labels=data_labels, sample_weights=sample_weights
+    )
     check_literals(
         hop_type=(hop_type, ["manifold", "metric"]),
         boundary_connectivity=(boundary_connectivity, ["knn", "core"]),
@@ -166,7 +173,7 @@ def fast_hbcc(
         core_distances,
         minimum_spanning_tree,
         data_labels=data_labels,
-        sample_weights=sample_weights,    
+        sample_weights=sample_weights,
         min_cluster_size=min_cluster_size,
         cluster_selection_method=cluster_selection_method,
         allow_single_cluster=allow_single_cluster,
@@ -356,7 +363,9 @@ class HBCC(HDBSCAN):
             finite_index = np.where(np.isfinite(X).sum(axis=1) == X.shape[1])[0]
             clean_data = X[finite_index]
             clean_labels = y[finite_index] if self.semi_supervised else None
-            sample_weight = sample_weight[finite_index] if sample_weight is not None else None
+            sample_weight = (
+                sample_weight[finite_index] if sample_weight is not None else None
+            )
 
             internal_to_raw = {
                 x: y for x, y in zip(range(len(finite_index)), finite_index)
@@ -394,7 +403,10 @@ class HBCC(HDBSCAN):
             self._single_linkage_tree = remap_single_linkage_tree(
                 self._single_linkage_tree, internal_to_raw, outliers
             )
-            self._core_graph = remap_csr_graph(self._core_graph, internal_to_raw)
+            self._core_graph = remap_csr_graph(
+                self._core_graph, finite_index, internal_to_raw, X.shape[0]
+            )
+            
             new_labels = np.full(X.shape[0], -1)
             new_labels[finite_index] = self.labels_
             self.labels_ = new_labels
@@ -405,7 +417,7 @@ class HBCC(HDBSCAN):
 
             new_bc = np.zeros(X.shape[0])
             new_bc[finite_index] = self.boundary_coefficient_
-            self.boundary_coefficient_ = new_probabilities
+            self.boundary_coefficient_ = new_bc
 
         return self
 
