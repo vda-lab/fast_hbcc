@@ -4,7 +4,11 @@ from typing import Literal
 from scipy.sparse import csr_array
 from sklearn.utils import check_array, check_X_y
 from sklearn.utils.validation import check_is_fitted, _check_sample_weight
-from fast_hdbscan.core_graph import core_graph_clusters, core_graph_to_edge_list
+from fast_hdbscan.core_graph import (
+    core_graph_clusters,
+    core_graph_to_edge_list,
+    CoreGraph,
+)
 from fast_hdbscan.hdbscan import (
     HDBSCAN,
     to_numpy_rec_array,
@@ -43,12 +47,18 @@ def check_literals(**kwargs):
 
 def remap_csr_graph(graph, finite_index, internal_to_raw, num_points):
     new_indptr = np.empty(num_points + 1, dtype=graph.indptr.dtype)
-    new_indptr[0] = 0
+    new_indptr[: finite_index[0] + 1] = 0
     for idx, (start, end) in enumerate(zip(finite_index, finite_index[1:])):
         new_indptr[start + 1 : end + 1] = graph.indptr[idx + 1]
-
+        start = end
+    new_indptr[finite_index[-1] + 1 :] = graph.indptr[-1]
     graph.indices[:] = np.vectorize(internal_to_raw.get)(graph.indices)
-    return graph
+    return new_indptr
+
+
+def remap_core_graph(graph, finite_index, internal_to_raw, num_points):
+    new_indptr = remap_csr_graph(graph, finite_index, internal_to_raw, num_points)
+    return CoreGraph(graph.weights, graph.distances, graph.indices, new_indptr)
 
 
 def boundary_coefficient_from_csr(g):
@@ -403,10 +413,10 @@ class HBCC(HDBSCAN):
             self._single_linkage_tree = remap_single_linkage_tree(
                 self._single_linkage_tree, internal_to_raw, outliers
             )
-            self._core_graph = remap_csr_graph(
+            self._core_graph = remap_core_graph(
                 self._core_graph, finite_index, internal_to_raw, X.shape[0]
             )
-            
+
             new_labels = np.full(X.shape[0], -1)
             new_labels[finite_index] = self.labels_
             self.labels_ = new_labels

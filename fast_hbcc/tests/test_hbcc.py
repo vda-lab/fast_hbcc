@@ -50,6 +50,10 @@ def test_missing_data():
     assert model.probabilities_[5] == 0
     clean_indices = list(range(1, 5)) + list(range(6, 200))
     clean_model = HBCC().fit(X_missing_data[clean_indices])
+    assert np.all(
+        clean_model._core_graph.indptr[1:]
+        == model._core_graph.indptr[np.array(clean_indices) + 1]
+    )
     assert np.allclose(clean_model.labels_, model.labels_[clean_indices])
 
 
@@ -174,7 +178,7 @@ def test_hbcc_persistence_threshold():
     assert np.all(model.labels_ == -1)
 
 
-@pytest.mark.skipif(not HAVE_HDBSCAN, reason='requires HDBSCAN')
+@pytest.mark.skipif(not HAVE_HDBSCAN, reason="requires HDBSCAN")
 def test_attributes():
     c = HBCC().fit(X)
     assert isinstance(c.condensed_tree_, CondensedTree)
