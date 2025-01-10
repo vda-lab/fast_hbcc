@@ -105,7 +105,7 @@ def manifold_mst_hop(
     core_graph = knn_mst_union(
         indices, core_distances, minimum_spanning_tree, core_distances
     )
-    if use_reachability:
+    if not use_reachability:
         for point in nb.prange(num_points):
             for child, value in core_graph[point].items():
                 core_graph[point][child] = (
