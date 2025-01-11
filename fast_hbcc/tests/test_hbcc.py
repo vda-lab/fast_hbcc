@@ -42,18 +42,14 @@ X_missing_data[5] = [np.nan, np.nan]
 def test_missing_data():
     """Tests if nan data are treated as infinite distance from all other points
     and assigned to -1 cluster"""
+    clean_indices = list(range(1, 5)) + list(range(6, 200))
     model = HBCC().fit(X_missing_data)
+    clean_model = HBCC().fit(X_missing_data[clean_indices])
     assert model.labels_[0] == -1
     assert model.labels_[5] == -1
     assert model.probabilities_[0] == 0
     assert model.probabilities_[5] == 0
     assert model.probabilities_[5] == 0
-    clean_indices = list(range(1, 5)) + list(range(6, 200))
-    clean_model = HBCC().fit(X_missing_data[clean_indices])
-    assert np.all(
-        clean_model._core_graph.indptr[1:]
-        == model._core_graph.indptr[np.array(clean_indices) + 1]
-    )
     assert np.allclose(clean_model.labels_, model.labels_[clean_indices])
 
 

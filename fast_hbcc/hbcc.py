@@ -52,13 +52,15 @@ def remap_csr_graph(graph, finite_index, internal_to_raw, num_points):
         new_indptr[start + 1 : end + 1] = graph.indptr[idx + 1]
         start = end
     new_indptr[finite_index[-1] + 1 :] = graph.indptr[-1]
-    graph.indices[:] = np.vectorize(internal_to_raw.get)(graph.indices)
-    return new_indptr
+    new_indices = np.vectorize(internal_to_raw.get)(graph.indices)
+    return new_indices, new_indptr
 
 
 def remap_core_graph(graph, finite_index, internal_to_raw, num_points):
-    new_indptr = remap_csr_graph(graph, finite_index, internal_to_raw, num_points)
-    return CoreGraph(graph.weights, graph.distances, graph.indices, new_indptr)
+    new_indices, new_indptr = remap_csr_graph(
+        graph, finite_index, internal_to_raw, num_points
+    )
+    return CoreGraph(graph.weights, graph.distances, new_indices, new_indptr)
 
 
 def boundary_coefficient_from_csr(g):
