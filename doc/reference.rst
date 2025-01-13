@@ -1,6 +1,9 @@
 API Reference
 =============
 
-.. automodule:: fast_hbcc
-    :members: HBCC, fast_hbcc, BoundaryClusterDetector, find_boundary_sub_clusters
+.. autoclass:: fast_hbcc.HBCC
+    :members:
 
+
+.. autoclass:: fast_hbcc.BoundaryClusterDetector
+    :members: HBCC, fast_hbcc, BoundaryClusterDetector, find_boundary_sub_clusters

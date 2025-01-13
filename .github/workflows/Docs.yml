@@ -43,7 +43,7 @@ jobs:
         run: |
           cd notebooks
           for FILE in *.ipynb; do 
-            cp $FILE ../docs
+            cp $FILE ../doc
           done
           cd ..
 
