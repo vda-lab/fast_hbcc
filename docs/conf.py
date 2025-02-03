@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath("."))
 # -- Project information -----------------------------------------------------
 
 project = 'fast_hbcc'
-copyright = '2024, Jelmer Bot'
+copyright = '2025, Jelmer Bot'
 author = 'Jelmer Bot'
 
 # The full version, including alpha/beta/rc tags
@@ -66,6 +66,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 #
 # html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
+templates_path = ["_templates"]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

@@ -1,5 +1,13 @@
 .. fast_hbcc documentation master file.
 
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+
+   examples
+   reference
+
+
 Hierarchical Boundary Coefficient Clustering
 ============================================
 
@@ -58,15 +66,6 @@ How to use HBCC
 
 .. image:: ./_static/example.png
    :alt: HBCC cluster scatterplot
-
-Contents
---------
-
-.. toctree::
-   :maxdepth: 2
-
-   examples
-   reference
 
 Citing
 ------

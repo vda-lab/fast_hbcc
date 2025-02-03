@@ -28,7 +28,7 @@ MANIFEST
 .pytest_cache/
 
 # Sphinx documentation
-doc/_build/
+docs/_build/
 
 # Jupyter Notebook
 .ipynb_checkpoints
