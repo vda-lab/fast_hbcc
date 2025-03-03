@@ -57,6 +57,14 @@ plt.show()
 ![HBCC cluster scatterplot](./doc/_static/example.png)
 
 
+## How to install HBCC
+
+This repository is published on pypi as the `fast-hbcc` package:
+
+```bash
+pip install fast-hbcc
+```
+
 
 ## Example Notebooks
 
