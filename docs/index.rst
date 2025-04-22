@@ -101,7 +101,6 @@ References
    Communications, 13(1), 1–14.
    https://doi.org/10.1038/s41467-022-33136-9.
 
-.. [5] Bot, Daniël M., et al. "FLASC: A Flare-Sensitive Clustering
-   Algorithm: Extending HDBSCAN\* for Detecting Branches in Clusters."
-   arXiv preprint arXiv:2311.15887 (2023).
-   https://arxiv.org/abs/2311.15887.
+.. [5] Bot D.M., Peeters J., Liesenborgs J., Aerts J. 2025. FLASC: a
+   flare-sensitive clustering algorithm. PeerJ Computer Science 11:e2792
+   https://doi.org/10.7717/peerj-cs.2792.
